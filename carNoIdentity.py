@@ -8,6 +8,8 @@ Created on Tue Oct 23 20:46:45 2018
 import cv2
 import numpy as np
 
+print(cv2.__version__)
+'''凸显识别'''
 
 def stretch(img):
     '''
@@ -51,7 +53,7 @@ def locate_license(img,afterimg):
     '''
     定位车牌号
     '''
-    img,contours,hierarchy=cv2.findContours(img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    contours,hierarchy=cv2.findContours(img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     
     #找出最大的三个区域
     block=[]
@@ -189,7 +191,7 @@ def find_end(start,arg,black,white,width,black_max,white_max):
                 
 
 if __name__=='__main__':
-    img=cv2.imread('../image/carnumber7.jpg',cv2.IMREAD_COLOR)
+    img=cv2.imread('images/0a943.PNG',cv2.IMREAD_COLOR)
     #预处理图像
     rect,afterimg=find_license(img)
     
