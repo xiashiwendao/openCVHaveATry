@@ -9,14 +9,13 @@ import cv2
 import numpy as np
 
 print(cv2.__version__)
-'''凸显识别'''
 
 def stretch(img):
     '''
-    图像拉伸函数
+    图像拉伸函数，增强对比度
     '''
-    maxi=float(img.max())
-    mini=float(img.min())
+    maxi=float(img.max()) # 最小灰度
+    mini=float(img.min()) # 最大灰度
     
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
