@@ -8,13 +8,14 @@ Created on Tue Oct 23 20:46:45 2018
 import cv4
 import numpy as np
 
+print(cv2.__version__)
 
 def stretch(img):
     '''
-    图像拉伸函数
+    图像拉伸函数，增强对比度
     '''
-    maxi=float(img.max())
-    mini=float(img.min())
+    maxi=float(img.max()) # 最小灰度
+    mini=float(img.min()) # 最大灰度
     
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
@@ -53,7 +54,7 @@ def locate_license(img,afterimg):
     '''
     定位车牌号
     '''
-    img,contours,hierarchy=cv4.findContours(img,cv4.RETR_EXTERNAL,cv4.CHAIN_APPROX_SIMPLE)
+    contours,hierarchy=cv2.findContours(img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     
     #找出最大的三个区域
     block=[]
@@ -191,7 +192,7 @@ def find_end(start,arg,black,white,width,black_max,white_max):
                 
 
 if __name__=='__main__':
-    img=cv4.imread('../image/carnumber7.jpg',cv4.IMREAD_COLOR)
+    img=cv2.imread('images/0a943.PNG',cv2.IMREAD_COLOR)
     #预处理图像
     rect,afterimg=find_license(img)
     
