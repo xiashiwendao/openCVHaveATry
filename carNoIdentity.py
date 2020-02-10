@@ -5,7 +5,7 @@ Created on Tue Oct 23 20:46:45 2018
 @author: Administrator
 """
 
-import cv4
+import cv2
 import numpy as np
 
 print(cv2.__version__)
