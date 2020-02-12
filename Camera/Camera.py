@@ -1,7 +1,10 @@
+import cv2
+import WindowManager
+import CaptureManager
 class Cameo(object):
     def __init__(self):
-        self._windowManager = WindowManager('Cameo', self.onKeypress)
-        self._captureManager = CaptureManager(cv2.VideoCapture(0), self._windowManager, True)
+        self._windowManager = WindowManager.WindowManager('Cameo', self.onKeypress)
+        self._captureManager = CaptureManager.CaptureManager(cv2.VideoCapture(1), self._windowManager, True)
     
     def run(self):
         """Run the main loop."""
@@ -9,6 +12,7 @@ class Cameo(object):
         while self._windowManager.isWindowCreated:
             self._captureManager.enterFrame()
             frame = self._captureManager.frame
+            self._windowManager.show(frame)
             # TODO: Filter the frame (Chapter 3).
             self._captureManager.exitFrame()
             self._windowManager.processEvents()
