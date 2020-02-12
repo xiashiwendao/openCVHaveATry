@@ -1,6 +1,8 @@
 import cv2
 import WindowManager
 import CaptureManager
+import filters
+
 class Cameo(object):
     def __init__(self):
         self._windowManager = WindowManager.WindowManager('Cameo', self.onKeypress)
