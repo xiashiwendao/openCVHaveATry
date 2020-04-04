@@ -27,10 +27,12 @@ def detect_people():
     cv2.imshow("people detection", img)
     cv2.waitKey()
     cv2.destroyAllWindows()
+    
 
 if __name__ == "__main__":
-    # detect_people()
-    path = r'C:\MySpace\research\machinelearning\OpenCV\CarData\datas\TrainImages\neg-1.pgm'
+    path = r'C:\MySpace\research\machinelearning\OpenCV\CarData\datas\TrainImages\pos-142.pgm'
     img = plt.imread(path)
     plt.imshow(img)
     plt.show()
+
+    # detect_people()

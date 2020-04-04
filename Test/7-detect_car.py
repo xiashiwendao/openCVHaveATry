@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from os.path import join
+
 # datapath = "/home/d3athmast3r/dev/python/CarData/TrainImages/"
 datapath=r'C:\MySpace\research\machinelearning\OpenCV\CarData\datas\TrainImages'
 
@@ -21,17 +22,21 @@ def extract_sift(fn):
 for i in range(8):
     bow_kmeans_trainer.add(extract_sift(path(pos,i)))
     bow_kmeans_trainer.add(extract_sift(path(neg,i)))
-    
+
 voc = bow_kmeans_trainer.cluster()
 extract_bow.setVocabulary( voc )
 
 def bow_features(fn):
     im = cv2.imread(fn,0)
     return extract_bow.compute(im, detect.detect(im))
+
 traindata, trainlabels = [],[]
 for i in range(20):
-    traindata.extend(bow_features(path(pos, i))); trainlabels.append(1)
-    traindata.extend(bow_features(path(neg, i))); trainlabels.append(-1)
+    traindata.extend(bow_features(path(pos, i))); 
+    trainlabels.append(1)
+    traindata.extend(bow_features(path(neg, i))); 
+    trainlabels.append(-1)
+    
 svm = cv2.ml.SVM_create()
 svm.train(np.array(traindata), cv2.ml.ROW_SAMPLE, np.array(trainlabels))
 def predict(fn):
@@ -41,7 +46,7 @@ def predict(fn):
 
     return p
 
-car = r"C:\MySpace\Practice\github\openCVHaveATry\images\detect_car\car.jfif"
+car = r"C:\MySpace\Practice\github\openCVHaveATry\images\detect_car\car.jpg"
 notcar = r"C:\MySpace\Practice\github\openCVHaveATry\images\detect_car\car.jpg"
 car_img = cv2.imread(car)
 notcar_img = cv2.imread(notcar)
@@ -50,9 +55,16 @@ not_car_predict = predict(notcar)
 font = cv2.FONT_HERSHEY_SIMPLEX
 if (car_predict[1][0][0] == 1.0):
     cv2.putText(car_img,'Car Detected',(10,30), font, 1,(0,255,0),2,cv2.LINE_AA)
+    print('car_predict: Car Detected')
+else:
+    print('car_predict: no car o')
 
 if (not_car_predict[1][0][0] == -1.0):
     cv2.putText(notcar_img,'Car Not Detected',(10,30), font, 1,(0,0,255),2,cv2.LINE_AA)
+    print('not_car_predict: Not Car Detected')
+else:
+    print('not_car_predict: sorry, just find a car')
+
 cv2.imshow('BOW + SVM Success', car_img)
 cv2.imshow('BOW + SVM Failure', notcar_img)
 cv2.waitKey(0)

@@ -24,7 +24,6 @@ def stretch(img):
     return img
 
 def dobinaryzation(img):
-    cv4.t
     '''
     二值化处理函数
     '''
@@ -33,7 +32,7 @@ def dobinaryzation(img):
     
     x=maxi-((maxi-mini)/2)
     #二值化,返回阈值ret  和  二值化操作后的图像thresh
-    ret,thresh=cv4.threshold(img,x,255,cv4.THRESH_BINARY)
+    ret,thresh=cv2.threshold(img,x,255,cv2.THRESH_BINARY)
     #返回二值化后的黑白图像
     return thresh
 
@@ -73,12 +72,12 @@ def locate_license(img,afterimg):
     for i in range(len(block)):
         b=afterimg[block[i][0][1]:block[i][0][3],block[i][0][0]:block[i][0][2]]
         #BGR转HSV
-        hsv=cv4.cvtColor(b,cv4.COLOR_BGR2HSV)
+        hsv=cv2.cvtColor(b,cv2.COLOR_BGR2HSV)
         #蓝色车牌的范围
         lower=np.array([100,50,50])
         upper=np.array([140,255,255])
         #根据阈值构建掩膜
-        mask=cv4.inRange(hsv,lower,upper)
+        mask=cv2.inRange(hsv,lower,upper)
         #统计权值
         w1=0
         for m in mask:
@@ -102,10 +101,10 @@ def find_license(img):
     m=400*img.shape[0]/img.shape[1]
     
     #压缩图像
-    img=cv4.resize(img,(400,int(m)),interpolation=cv4.INTER_CUBIC)
+    img=cv2.resize(img,(400,int(m)),interpolation=cv2.INTER_CUBIC)
     
     #BGR转换为灰度图像
-    gray_img=cv4.cvtColor(img,cv4.COLOR_BGR2GRAY)
+    gray_img=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     
     #灰度拉伸
     stretchedimg=stretch(gray_img)
@@ -114,29 +113,29 @@ def find_license(img):
     r=16
     h=w=r*2+1
     kernel=np.zeros((h,w),np.uint8)
-    cv4.circle(kernel,(r,r),r,1,-1)
+    cv2.circle(kernel,(r,r),r,1,-1)
     #开运算
-    openingimg=cv4.morphologyEx(stretchedimg,cv4.MORPH_OPEN,kernel)
-    #获取差分图，两幅图像做差  cv4.absdiff('图像1','图像2')
-    strtimg=cv4.absdiff(stretchedimg,openingimg)
+    openingimg=cv2.morphologyEx(stretchedimg,cv2.MORPH_OPEN,kernel)
+    #获取差分图，两幅图像做差  cv2.absdiff('图像1','图像2')
+    strtimg=cv2.absdiff(stretchedimg,openingimg)
     
     #图像二值化
     binaryimg=dobinaryzation(strtimg)
     
     #canny边缘检测
-    canny=cv4.Canny(binaryimg,binaryimg.shape[0],binaryimg.shape[1])
+    canny=cv2.Canny(binaryimg,binaryimg.shape[0],binaryimg.shape[1])
     
     '''消除小的区域，保留大块的区域，从而定位车牌'''
     #进行闭运算
     kernel=np.ones((5,19),np.uint8)
-    closingimg=cv4.morphologyEx(canny,cv4.MORPH_CLOSE,kernel)
+    closingimg=cv2.morphologyEx(canny,cv2.MORPH_CLOSE,kernel)
     
     #进行开运算
-    openingimg=cv4.morphologyEx(closingimg,cv4.MORPH_OPEN,kernel)
+    openingimg=cv2.morphologyEx(closingimg,cv2.MORPH_OPEN,kernel)
     
     #再次进行开运算
     kernel=np.ones((11,5),np.uint8)
-    openingimg=cv4.morphologyEx(openingimg,cv4.MORPH_OPEN,kernel)
+    openingimg=cv2.morphologyEx(openingimg,cv2.MORPH_OPEN,kernel)
     
     #消除小区域，定位车牌位置
     rect=locate_license(openingimg,img)
@@ -159,7 +158,7 @@ def cut_license(afterimg,rect):
     #创建前景模型
     fgdModel=np.zeros((1,65),np.float64)
     #分割图像
-    cv4.grabCut(afterimg,mask,rect_copy,bgdModel,fgdModel,5,cv4.GC_INIT_WITH_RECT)
+    cv2.grabCut(afterimg,mask,rect_copy,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_RECT)
     mask2=np.where((mask==2)|(mask==0),0,1).astype('uint8')
     img_show=afterimg*mask2[:,:,np.newaxis]
     
@@ -170,14 +169,14 @@ def deal_license(licenseimg):
     车牌图片二值化
     '''
     #车牌变为灰度图像
-    gray_img=cv4.cvtColor(licenseimg,cv4.COLOR_BGR2GRAY)
+    gray_img=cv2.cvtColor(licenseimg,cv2.COLOR_BGR2GRAY)
     
     #均值滤波  去除噪声
     kernel=np.ones((3,3),np.float32)/9
-    gray_img=cv4.filter2D(gray_img,-1,kernel)
+    gray_img=cv2.filter2D(gray_img,-1,kernel)
     
     #二值化处理
-    ret,thresh=cv4.threshold(gray_img,120,255,cv4.THRESH_BINARY)
+    ret,thresh=cv2.threshold(gray_img,120,255,cv2.THRESH_BINARY)
     
     return thresh
 
@@ -197,17 +196,17 @@ if __name__=='__main__':
     rect,afterimg=find_license(img)
     
     #框出车牌号
-    cv4.rectangle(afterimg,(rect[0],rect[1]),(rect[2],rect[3]),(0,255,0),2)
-    cv4.imshow('afterimg',afterimg)
+    cv2.rectangle(afterimg,(rect[0],rect[1]),(rect[2],rect[3]),(0,255,0),2)
+    cv2.imshow('afterimg',afterimg)
     
     #分割车牌与背景
     cutimg=cut_license(afterimg,rect)
-    cv4.imshow('cutimg',cutimg)
+    cv2.imshow('cutimg',cutimg)
       
     #二值化生成黑白图
     thresh=deal_license(cutimg)
-    cv4.imshow('thresh',thresh)
-    cv4.waitKey(0)
+    cv2.imshow('thresh',thresh)
+    cv2.waitKey(0)
     
     #分割字符
     '''
@@ -254,11 +253,11 @@ if __name__=='__main__':
             n=end
             if end-start>5:
                 cj=thresh[1:height,start:end]
-                cv4.imshow('cutlicense',cj)
-                cv4.waitKey(0)
+                cv2.imshow('cutlicense',cj)
+                cv2.waitKey(0)
     
     
-    cv4.waitKey(0)
-    cv4.destroyAllWindows()
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
