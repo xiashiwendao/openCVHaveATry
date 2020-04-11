@@ -1,5 +1,5 @@
 import cv2
-
+import numpy as np
 
 def stretch(img):
     '''
@@ -32,10 +32,20 @@ def dobinaryzation(img):
 if __name__ == "__main__":
     img=cv2.imread('images/0a943.PNG',cv2.IMREAD_COLOR)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_stresh = stretch(img)
+    img_stretch = stretch(img)
     img_twovalue = dobinaryzation(img)
     cv2.imshow('raw image', img)
-    cv2.imshow('stretch img', img_stresh)
+    cv2.imshow('stretch img', img_stretch)
     cv2.imshow('two value', img_twovalue)
+    r=16
+    h=w=r*2+1
+    kernel=np.zeros((h,w),np.uint8)
+    cv2.circle(kernel,(r,r),r,1,-1)
+    openingimg=cv2.morphologyEx(img_stretch,cv2.MORPH_OPEN,kernel)
+    strtimg=cv2.absdiff(img_stretch,openingimg)
+    cv2.imshow('diff img', strtimg)
+    img_twovalue_2 = dobinaryzation(strtimg)    
+    cv2.imshow('two value_2', img_twovalue_2)
+    
     cv2.waitKey()
     cv2.destroyAllWindows()

@@ -121,16 +121,18 @@ def find_license(img):
     
     #图像二值化
     binaryimg=dobinaryzation(strtimg)
-    
+    cv2.imshow('binaryimg', binaryimg)
+    cv2.waitKey(0)
     #canny边缘检测
     canny=cv2.Canny(binaryimg,binaryimg.shape[0],binaryimg.shape[1])
     
     '''消除小的区域，保留大块的区域，从而定位车牌'''
-    #进行闭运算
-    kernel=np.ones((5,19),np.uint8)
+    #进行闭运算(填补黑点，断线)
+    # 定义卷积核，这个卷积核将会遍历图像，执行闭运算操作
+    kernel=np.ones((5,19),np.uint8) 
     closingimg=cv2.morphologyEx(canny,cv2.MORPH_CLOSE,kernel)
     
-    #进行开运算
+    #进行开运算（去除噪点）
     openingimg=cv2.morphologyEx(closingimg,cv2.MORPH_OPEN,kernel)
     
     #再次进行开运算
@@ -142,6 +144,7 @@ def find_license(img):
     
     return rect,img
 
+# 切割出车牌
 def cut_license(afterimg,rect):
     '''
     图像分割函数
@@ -151,14 +154,15 @@ def cut_license(afterimg,rect):
     rect[3]=rect[3]-rect[1]
     rect_copy=tuple(rect.copy())
     rect=[0,0,0,0]
-    #创建掩膜
+    #创建掩码图像，0代表背景图像，黑色，在grabcut形成的图像识别的背景为黑色，就是这里掩码图像使然
     mask=np.zeros(afterimg.shape[:2],np.uint8)
     #创建背景模型  大小只能为13*5，行数只能为1，单通道浮点型
+    #这里13*5是grabcut函数定义的
     bgdModel=np.zeros((1,65),np.float64)
     #创建前景模型
     fgdModel=np.zeros((1,65),np.float64)
-    #分割图像
-    cv2.grabCut(afterimg,mask,rect_copy,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_RECT)
+    #分割图像，提取出前景车牌号；grabcut里面的mask是要切割部分范围
+    cv2.grabCut(afterimg, mask, rect_copy, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
     mask2=np.where((mask==2)|(mask==0),0,1).astype('uint8')
     img_show=afterimg*mask2[:,:,np.newaxis]
     
@@ -172,6 +176,7 @@ def deal_license(licenseimg):
     gray_img=cv2.cvtColor(licenseimg,cv2.COLOR_BGR2GRAY)
     
     #均值滤波  去除噪声
+    # 这个kernel就是用于去除噪声，但是话说上面不是已经通过开闭运算去噪了吗？
     kernel=np.ones((3,3),np.float32)/9
     gray_img=cv2.filter2D(gray_img,-1,kernel)
     
@@ -179,7 +184,6 @@ def deal_license(licenseimg):
     ret,thresh=cv2.threshold(gray_img,120,255,cv2.THRESH_BINARY)
     
     return thresh
-
 
 def find_end(start,arg,black,white,width,black_max,white_max):
     end=start+1
@@ -230,13 +234,19 @@ if __name__=='__main__':
                 line_white+=1
             if thresh[j][i]==0:
                 line_black+=1
+        # 从历史的列和当前列最大黑白像素数进行比较，取单列最大黑白像素数
+        # 因为是覆盖模式，所以两层for语句跑完，white_max和black_max里面
+        # 存的是所有列中最大那一列黑白像素数量
         white_max=max(white_max,line_white)
         black_max=max(black_max,line_black)
+        # 各列黑白像素数都保存到对应列表中
         white.append(line_white)
         black.append(line_black)
-        print('white',white)
-        print('black',black)
-    #arg为true表示黑底白字，False为白底黑字
+        # print('white',white)
+        # print('black',black)
+    
+    # arg为true表示黑底白字，False为白底黑字
+    # 黑底白字一定是黑色多于白色，反之亦然，根据黑白数量可以知道颜色分布情况
     arg=True
     if black_max<white_max:
         arg=False
@@ -244,9 +254,14 @@ if __name__=='__main__':
     n=1
     start=1
     end=2
-    while n<width-2:
+    while n<width-2: # 这里为什么是-2呢？
         n+=1
         #判断是白底黑字还是黑底白字  0.05参数对应上面的0.95 可作调整
+        # arg=True，黑底白字，false，反之，这里测试case都是true
+        '''
+        这里讲的其实是判断一列到底是纯背景还是有可用信息，如果连续N列都是有信息的然后是无信息列，
+        那么可以认为这N列组合在一起应该就是一组有价值的字符
+        '''
         if(white[n] if arg else black[n])>(0.02*white_max if arg else 0.02*black_max):
             start=n
             end=find_end(start,arg,black,white,width,black_max,white_max)
@@ -255,7 +270,6 @@ if __name__=='__main__':
                 cj=thresh[1:height,start:end]
                 cv2.imshow('cutlicense',cj)
                 cv2.waitKey(0)
-    
     
     cv2.waitKey(0)
     cv2.destroyAllWindows()
