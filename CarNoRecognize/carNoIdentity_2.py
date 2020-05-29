@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 # TODO 增加旋转
 # TODO 是否可以用手写集来作为文字识别？
+PIXEL_SIZE = 400
 def imread_photo(filename, flags=cv2.IMREAD_COLOR):
     """
     该函数能够读取磁盘中的图片文件，默认以彩色图像的方式进行读取
@@ -460,44 +461,62 @@ def load_data(filename_1):
             # cv2.imshow("temp_img",temp_img)
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
-            temp_img = temp_img.reshape(1, 800)
+            temp_img = temp_img.reshape(1, PIXEL_SIZE)
             dataArr[sample_number - 1, :] = temp_img
         label_list.extend([i] * len(temp_address_2))
     # print(label_list)
     # print(len(label_list))
     return dataArr, np.array(label_list)
 import os, sys
-def load_data_2(filename_1=r'C:\Users\python_gay\MySpace\Code_Space\openCVHaveATry\images\car_no\train_no'):
+def load_data_2(filename_1=r'C:\Users\python_gay\MySpace\Code_Space\openCVHaveATry\images\car_no\Train'):
     """
     这个函数用来加载数据集，其中filename_1是一个文件的绝对地址
     """
-    img_dir = filename_1
-    file_size = len(os.listdir(img_dir))
-    pictures = np.zeros((file_size, 800))
+    # out_dir_chars = os.path.join(filename_1, 'chars')
+    # out_dir_chinese = os.path.join(filename_1, 'charsChinese')
+    file_count = 0
+
+    for inner_dir in os.listdir(filename_1):
+        inner_dir_full = os.path.join(filename_1, inner_dir)
+        for img_dir in os.listdir(inner_dir_full):
+            img_dir_fullpath = os.path.join(inner_dir_full, img_dir)
+            for filename in os.listdir(img_dir_fullpath):
+                prefix = filename.split('.')[0]
+                suffix = filename.split('.')[1]
+                if(suffix != 'jpg'):
+                    continue
+                file_count += 1
+
+    print('+++++++++ train file count is: ', file_count, '++++++++++')
+    pictures = np.zeros((file_count, PIXEL_SIZE))
     labels = []
     index = 0
-    for filename in os.listdir(img_dir):
-        prefix = filename.split('.')[0]
-        suffix = filename.split('.')[1]
-        if(suffix != 'bmp'):
-            continue
-        file_name = os.path.join(img_dir, filename)
-        print('++++++ read file name: ', file_name, '++++++++++')
-        # img_temp = cv2.imread(file_name.decode('gbk'))
-        img_temp=cv2.imdecode(np.fromfile(file_name, dtype=np.uint8), cv2.IMREAD_COLOR)
-        img_temp = cv2.cvtColor(img_temp, cv2.COLOR_RGB2GRAY)
-        img_temp = img_temp.reshape(1, 800)
-        pictures[index] = img_temp
-        labels.append(prefix)
-    
+    for inner_dir in os.listdir(filename_1):
+        inner_dir_full = os.path.join(filename_1, inner_dir)
+        for img_dir in os.listdir(inner_dir_full):
+            img_dir_fullpath = os.path.join(inner_dir_full, img_dir)
+            for filename in os.listdir(img_dir_fullpath):
+                prefix = filename.split('.')[0]
+                suffix = filename.split('.')[1]
+                if(suffix != 'jpg'):
+                    continue
+                file_name = os.path.join(img_dir_fullpath, filename)
+                # print('++++++ read file name: ', file_name, '++++++++++')
+                # img_temp = cv2.imread(file_name.decode('gbk'))
+                img_temp=cv2.imdecode(np.fromfile(file_name, dtype=np.uint8), cv2.IMREAD_COLOR)
+                img_temp = cv2.cvtColor(img_temp, cv2.COLOR_RGB2GRAY)
+                img_temp = img_temp.reshape(1, PIXEL_SIZE)
+                pictures[index] = img_temp
+                index+=1
+                labels.append(img_dir)
+    print('+++++++++ pictures count: ', len(labels), '++++++++++')
     return pictures, labels
-
 
 # 训练SVM模型
 def SVM_recognition(dataArr, label_list):
-    # from sklearn.decomposition import PCA  # 从sklearn.decomposition 导入PCA
-    # estimator = PCA(n_components=7)  # 初始化一个可以将高维度特征向量（400维）压缩至20个维度的PCA
-    # new_dataArr = estimator.fit_transform(dataArr)
+    from sklearn.decomposition import PCA  # 从sklearn.decomposition 导入PCA
+    estimator = PCA(n_components=20)  # 初始化一个可以将高维度特征向量（400维）压缩至20个维度的PCA
+    # dataArr = estimator.fit_transform(dataArr)
     # new_testArr = estimator.fit_transform(testArr)
 
     import sklearn.svm
@@ -510,16 +529,16 @@ def SVM_recognition(dataArr, label_list):
 
 
 def SVM_recognition_character(character_list):
-    character_Arr = np.zeros((len(character_list), 800))
+    character_Arr = np.zeros((len(character_list), PIXEL_SIZE))
     # print(len(character_list))
     for i in range(len(character_list)):
         character_ = cv2.resize(
-            character_list[i], (40, 20), interpolation=cv2.INTER_LINEAR)
-        new_character_ = character_.reshape((1, 800))[0]
+            character_list[i], (20, 20), interpolation=cv2.INTER_LINEAR)
+        new_character_ = character_.reshape((1, PIXEL_SIZE))[0]
         character_Arr[i, :] = new_character_
 
-    # from sklearn.decomposition import PCA  # 从sklearn.decomposition 导入PCA
-    # estimator = PCA(n_components=7)  # 初始化一个可以将高维度特征向量（400维）压缩至20个维度的PCA
+    from sklearn.decomposition import PCA  # 从sklearn.decomposition 导入PCA
+    estimator = PCA(n_components=20)  # 初始化一个可以将高维度特征向量（400维）压缩至20个维度的PCA
     # character_Arr = estimator.fit_transform(character_Arr)
 
     model_file ='based_SVM_character_train_model.m'
@@ -543,7 +562,10 @@ def SVM_recognition_character(character_list):
     #     print('%c' % middle_route[predict_result.tolist()[k]])
 
 if __name__ == "__main__":
-    img = imread_photo(r"C:\Users\python_gay\MySpace\Code_Space\openCVHaveATry\images\car_no\car.jpg")
+    # img = imread_photo(r"C:\Users\python_gay\MySpace\Code_Space\openCVHaveATry\images\car_no\car.jpg")
+    file_name = r"C:\Users\python_gay\MySpace\Code_Space\openCVHaveATry\images\car_no\Test\京E51619.jpg"
+    img=cv2.imdecode(np.fromfile(file_name, dtype=np.uint8), cv2.IMREAD_COLOR)
+
     img_resize = resize_photo(img)
     gray_img_, contours = predict(img_resize)
     car_plate = chose_licence_plate(contours)
@@ -555,6 +577,11 @@ if __name__ == "__main__":
     # cv2.imshow('image_annotated', image_annotated)
     # cv2.imshow('image_upanddown', image_upanddown)
     character_list = split_licensePlate_character(image_upanddown)
+    # test
+    # img_test= imread_photo(r"C:\Users\python_gay\MySpace\Code_Space\openCVHaveATry\images\car_no\train_no\2.bmp")
+    # img_test = cv2.cvtColor(img_test, cv2.COLOR_BGR2GRAY)
+    # character_list=[]
+    # character_list.append(img_test)
     SVM_recognition_character(character_list)
 
     # cv2.waitKey(0)
