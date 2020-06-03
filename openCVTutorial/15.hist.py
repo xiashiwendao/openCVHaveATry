@@ -23,12 +23,29 @@ def equalize_pic():
     plt.hist(equ_img, 256, [0, 256])
     plt.show()
 
+import sys, os
 def equalize_pic_2():
-    img = cv2.imread(img_path_2)
+    img = cv2.imread(img_path_2, cv2.IMREAD_GRAYSCALE)
+    # img = cv2.imread(img_path_2)
     equ_img = cv2.equalizeHist(img)
     cv2.imshow('equliaze', np.hstack((img, equ_img)))
     cv2.waitKey(0)
 
+def adapterHist():
+    img = cv2.imread(img_path_2, cv2.IMREAD_GRAYSCALE)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    cl1 = clahe.apply(img)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(18, 18))
+    cl2 = clahe.apply(img)
 
+    cv2.imshow('equliaze', np.hstack((cl1, cl2)))
+    
+    cv2.waitKey(0)
+# 计算指定区域进行直方图
+def homework():
+    img = cv2.imread(img_path, 0)
+    hist = cv2.calcHist([img], [0], [200, 200], [256], [0, 256])  # 性能：0.025288 s
+ 
 if __name__ == "__main__":
-    equalize_pic()
+    # equalize_pic_2()
+    adapterHist()
